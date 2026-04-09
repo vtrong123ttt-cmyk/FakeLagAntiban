@@ -11,7 +11,7 @@ jobs:
       - name: Setup Theos
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential perl git curl libssl-dev
+          sudo apt-get install -y build-essential perl git curl libssl-dev xz-utils
           export THEOS=~/theos
           git clone --recursive --depth 1 https://github.com/theos/theos.git $THEOS
           
@@ -21,17 +21,21 @@ jobs:
           rm -rf $THEOS/sdks
           git clone --depth 1 https://github.com/theos/sdks.git $THEOS/sdks
           
-      - name: Setup Toolchain (Buoc Cuoi Cung)
+      - name: Setup Toolchain (Link Direct 100%)
         run: |
           export THEOS=~/theos
           mkdir -p $THEOS/toolchain/linux/iphone
-          # Tai bo bien dich chuẩn cho Linux
-          curl -LO https://github.com/theos/toolchain/releases/download/linux-x86_64/toolchain-linux-x86_64.tar.gz
-          tar -xf toolchain-linux-x86_64.tar.gz -C $THEOS/toolchain/linux/iphone
+          # Tai Toolchain tu sbingner - Cuc ky on dinh cho Linux
+          curl -L "https://github.com/sbingner/llvm-project/releases/download/v10.0.0-1/linux-ios-arm64e-clang-toolchain.tar.lzma" -o toolchain.tar.lzma
+          # Giai nen tar.lzma
+          tar -xf toolchain.tar.lzma -C $THEOS/toolchain/linux/iphone
+          rm toolchain.tar.lzma
           
       - name: Compile Tweak
         run: |
           export THEOS=~/theos
+          # Lenh nay de may chu hieu duong dan Toolchain moi
+          export PATH=$THEOS/toolchain/linux/iphone/bin:$PATH
           make package
           
       - name: Upload Artifact
