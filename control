@@ -1,0 +1,6 @@
+Package: com.may.fakelag
+Name: FakeLagAntiban
+Depends: mobilesubstrate
+Version: 1.0
+Architecture: iphoneos-arm
+Description: Fake Lag + Antiban Pro cho iPhone 8 Plus
