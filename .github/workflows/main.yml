@@ -13,18 +13,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential perl git curl libssl-dev
           export THEOS=~/theos
-          # Chỉ lấy bản mới nhất, không lấy lịch sử
+          # Tải Theos rút gọn
           git clone --recursive --depth 1 https://github.com/theos/theos.git $THEOS
           
-      - name: Setup iOS SDK (Turbo Mode)
+      - name: Setup iOS SDK (Fix Directory Exists)
         run: |
           export THEOS=~/theos
-          # Lệnh then chốt: --depth 1 sẽ giúp tải nhanh thần sầu
+          # Xóa thư mục cũ để tránh lỗi "already exists"
+          rm -rf $THEOS/sdks
+          # Tải SDK bản siêu nhanh
           git clone --depth 1 https://github.com/theos/sdks.git $THEOS/sdks
           
       - name: Compile Tweak
         run: |
           export THEOS=~/theos
+          # Lệnh nấu chính thức
           make package
           
       - name: Upload Artifact
