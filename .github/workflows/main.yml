@@ -3,15 +3,17 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # Chuyển sang bản 20.04 để tương thích hoàn hảo với Toolchain
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Theos & Dependencies
+      - name: Setup Theos & Fix Library
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential perl git curl libssl-dev xz-utils
+          # Cài thêm libtinfo5 và libncurses5 - "Thuốc trị bệnh" cho lỗi cuối cùng của mày
+          sudo apt-get install -y build-essential perl git curl libssl-dev xz-utils libtinfo5 libncurses5
           export THEOS=~/theos
           git clone --recursive --depth 1 https://github.com/theos/theos.git $THEOS
           
@@ -21,15 +23,13 @@ jobs:
           rm -rf $THEOS/sdks
           git clone --depth 1 https://github.com/theos/sdks.git $THEOS/sdks
           
-      - name: Setup Toolchain (Auto-Locate)
+      - name: Setup Toolchain (Fix-All)
         run: |
           export THEOS=~/theos
           mkdir -p $THEOS/toolchain/linux/iphone
           curl -L "https://github.com/sbingner/llvm-project/releases/download/v10.0.0-1/linux-ios-arm64e-clang-toolchain.tar.lzma" -o toolchain.tar.lzma
-          # Giải nén vào thư mục tạm
           mkdir -p temp_toolchain
           tar -xf toolchain.tar.lzma -C temp_toolchain
-          # TƯ DUY PRO: Tự tìm folder 'bin' rồi chuyển nội dung vào đúng chỗ
           BIN_PATH=$(find temp_toolchain -name bin -type d | head -n 1)
           PARENT_PATH=$(dirname "$BIN_PATH")
           cp -R "$PARENT_PATH"/* $THEOS/toolchain/linux/iphone/
@@ -39,7 +39,7 @@ jobs:
         run: |
           export THEOS=~/theos
           export PATH=$THEOS/toolchain/linux/iphone/bin:$PATH
-          # Sửa lỗi Makefile nếu tên file không khớp
+          # Bắt đầu nấu hàng
           make package
           
       - name: Upload Artifact
