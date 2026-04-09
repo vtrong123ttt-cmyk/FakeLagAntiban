@@ -8,7 +8,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Theos
+      - name: Setup Theos & Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential perl git curl libssl-dev xz-utils
@@ -21,21 +21,25 @@ jobs:
           rm -rf $THEOS/sdks
           git clone --depth 1 https://github.com/theos/sdks.git $THEOS/sdks
           
-      - name: Setup Toolchain (Link Direct 100%)
+      - name: Setup Toolchain (Auto-Locate)
         run: |
           export THEOS=~/theos
           mkdir -p $THEOS/toolchain/linux/iphone
-          # Tai Toolchain tu sbingner - Cuc ky on dinh cho Linux
           curl -L "https://github.com/sbingner/llvm-project/releases/download/v10.0.0-1/linux-ios-arm64e-clang-toolchain.tar.lzma" -o toolchain.tar.lzma
-          # Giai nen tar.lzma
-          tar -xf toolchain.tar.lzma -C $THEOS/toolchain/linux/iphone
-          rm toolchain.tar.lzma
+          # Giải nén vào thư mục tạm
+          mkdir -p temp_toolchain
+          tar -xf toolchain.tar.lzma -C temp_toolchain
+          # TƯ DUY PRO: Tự tìm folder 'bin' rồi chuyển nội dung vào đúng chỗ
+          BIN_PATH=$(find temp_toolchain -name bin -type d | head -n 1)
+          PARENT_PATH=$(dirname "$BIN_PATH")
+          cp -R "$PARENT_PATH"/* $THEOS/toolchain/linux/iphone/
+          rm -rf temp_toolchain toolchain.tar.lzma
           
       - name: Compile Tweak
         run: |
           export THEOS=~/theos
-          # Lenh nay de may chu hieu duong dan Toolchain moi
           export PATH=$THEOS/toolchain/linux/iphone/bin:$PATH
+          # Sửa lỗi Makefile nếu tên file không khớp
           make package
           
       - name: Upload Artifact
