@@ -13,21 +13,25 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential perl git curl libssl-dev
           export THEOS=~/theos
-          # Tải Theos rút gọn
           git clone --recursive --depth 1 https://github.com/theos/theos.git $THEOS
           
-      - name: Setup iOS SDK (Fix Directory Exists)
+      - name: Setup iOS SDK
         run: |
           export THEOS=~/theos
-          # Xóa thư mục cũ để tránh lỗi "already exists"
           rm -rf $THEOS/sdks
-          # Tải SDK bản siêu nhanh
           git clone --depth 1 https://github.com/theos/sdks.git $THEOS/sdks
+          
+      - name: Setup Toolchain (Buoc Cuoi Cung)
+        run: |
+          export THEOS=~/theos
+          mkdir -p $THEOS/toolchain/linux/iphone
+          # Tai bo bien dich chuẩn cho Linux
+          curl -LO https://github.com/theos/toolchain/releases/download/linux-x86_64/toolchain-linux-x86_64.tar.gz
+          tar -xf toolchain-linux-x86_64.tar.gz -C $THEOS/toolchain/linux/iphone
           
       - name: Compile Tweak
         run: |
           export THEOS=~/theos
-          # Lệnh nấu chính thức
           make package
           
       - name: Upload Artifact
