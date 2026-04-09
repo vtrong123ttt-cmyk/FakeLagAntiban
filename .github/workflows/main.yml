@@ -1,25 +1,29 @@
 name: Build-FF-iOS
-on: [push, workflow_dispatch]
+on: [push, pull_request, workflow_dispatch]
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Install Theos & SDK
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Theos & SDK
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential perl git curl libssl-dev
           bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
-          # Tải SDK iOS để nấu file dylib
           curl -LO https://github.com/theos/sdks/raw/master/iPhoneOS14.5.sdk.tar.xz
           mkdir -p ~/theos/sdks
           tar -xf iPhoneOS14.5.sdk.tar.xz -C ~/theos/sdks
-      - name: Compile
+          
+      - name: Compile Tweak
         run: |
           export THEOS=~/theos
           make package
-      - name: Save-File
-        uses: actions/upload-artifact@v3
+          
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
         with:
           name: Hack-FF-Thanh-Pham
           path: packages/*.deb
