@@ -15,12 +15,10 @@ jobs:
           export THEOS=~/theos
           git clone --recursive https://github.com/theos/theos.git $THEOS
           
-      - name: Setup iOS SDK
+      - name: Setup iOS SDK (Fix Loi Giai Nen)
         run: |
           export THEOS=~/theos
-          curl -LO https://github.com/theos/sdks/raw/master/iPhoneOS14.5.sdk.tar.xz
-          mkdir -p $THEOS/sdks
-          tar -xf iPhoneOS14.5.sdk.tar.xz -C $THEOS/sdks
+          git clone https://github.com/theos/sdks.git $THEOS/sdks
           
       - name: Compile Tweak
         run: |
