@@ -3,44 +3,41 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
-    # Sử dụng Ubuntu 20.04 để có libtinfo5 mặc định
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Environment & Fix Libs
+      - name: Setup Dependencies
         run: |
           sudo apt-get update
-          # Cài đúng các thư viện mà cái ảnh lỗi 'libtinfo.so.5' yêu cầu
           sudo apt-get install -y build-essential perl git curl libssl-dev xz-utils libtinfo5 libncurses5
-          export THEOS=~/theos
-          git clone --recursive --depth 1 https://github.com/theos/theos.git $THEOS
           
-      - name: Setup iOS SDK
+      - name: Install Theos (Manual)
         run: |
-          export THEOS=~/theos
-          rm -rf $THEOS/sdks
-          git clone --depth 1 https://github.com/theos/sdks.git $THEOS/sdks
+          git clone --recursive --depth 1 https://github.com/theos/theos.git ~/theos
           
-      - name: Setup Toolchain (Sbingner Pro)
+      - name: Install iOS SDK (Manual)
         run: |
-          export THEOS=~/theos
-          mkdir -p $THEOS/toolchain/linux/iphone
+          mkdir -p ~/theos/sdks
+          git clone --depth 1 https://github.com/theos/sdks.git ~/theos/sdks
+          
+      - name: Install Toolchain (Sbingner)
+        run: |
+          mkdir -p ~/theos/toolchain/linux/iphone
           curl -L "https://github.com/sbingner/llvm-project/releases/download/v10.0.0-1/linux-ios-arm64e-clang-toolchain.tar.lzma" -o toolchain.tar.lzma
-          # Giải nén chuẩn 100% vào thư mục toolchain
-          tar -xf toolchain.tar.lzma --strip-components=1 -C $THEOS/toolchain/linux/iphone
+          tar -xf toolchain.tar.lzma --strip-components=1 -C ~/theos/toolchain/linux/iphone
           rm toolchain.tar.lzma
           
       - name: Compile Tweak
         run: |
           export THEOS=~/theos
-          # Ép máy chủ dùng đúng Toolchain và SDK vừa tải
           export PATH=$THEOS/toolchain/linux/iphone/bin:$PATH
+          # Lệnh nấu chính
           make package
           
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Hack-FF-Thanh-Pham
+          name: Hack-FF-Thành-Phẩm
           path: packages/*.deb
