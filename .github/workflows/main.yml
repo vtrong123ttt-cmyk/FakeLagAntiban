@@ -3,28 +3,32 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-20.04 # Bản này ổn định và có sẵn thư viện cũ
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 # Đã sửa lỗi @@v4 thành @v4
 
       - name: Setup Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential perl git curl libssl-dev xz-utils libtinfo5 libncurses5
           
-      - name: Install Theos (Manual)
+      - name: Install Theos
         run: |
           git clone --recursive --depth 1 https://github.com/theos/theos.git ~/theos
           
-      - name: Install iOS SDK (Manual)
+      - name: Install iOS SDK
         run: |
+          # Chỉ tải đúng cái cần thiết để không phải đợi lâu
           mkdir -p ~/theos/sdks
-          git clone --depth 1 https://github.com/theos/sdks.git ~/theos/sdks
+          curl -LO https://github.com/theos/sdks/raw/master/iPhoneOS14.5.sdk.tar.xz
+          tar -xf iPhoneOS14.5.sdk.tar.xz -C ~/theos/sdks
+          rm iPhoneOS14.5.sdk.tar.xz
           
-      - name: Install Toolchain (Sbingner)
+      - name: Install Toolchain (Direct Link)
         run: |
           mkdir -p ~/theos/toolchain/linux/iphone
+          # Dùng link trực tiếp để tránh lỗi "not in gzip format"
           curl -L "https://github.com/sbingner/llvm-project/releases/download/v10.0.0-1/linux-ios-arm64e-clang-toolchain.tar.lzma" -o toolchain.tar.lzma
           tar -xf toolchain.tar.lzma --strip-components=1 -C ~/theos/toolchain/linux/iphone
           rm toolchain.tar.lzma
@@ -33,11 +37,11 @@ jobs:
         run: |
           export THEOS=~/theos
           export PATH=$THEOS/toolchain/linux/iphone/bin:$PATH
-          # Lệnh nấu chính
+          # Bắt đầu compile FakeLagPro
           make package
           
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Hack-FF-Thành-Phẩm
+          name: Hack-FF-Cua-May
           path: packages/*.deb
