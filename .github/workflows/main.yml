@@ -3,16 +3,16 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
-    # Chuyển sang bản 20.04 để tương thích hoàn hảo với Toolchain
+    # Sử dụng Ubuntu 20.04 để có độ tương thích cao nhất với Toolchain iOS
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@@v4
 
-      - name: Setup Theos & Fix Library
+      - name: Setup Environment & Fix Libs
         run: |
           sudo apt-get update
-          # Cài thêm libtinfo5 và libncurses5 - "Thuốc trị bệnh" cho lỗi cuối cùng của mày
+          # Cài đặt các thư viện cũ mà Toolchain yêu cầu (libtinfo5, libncurses5)
           sudo apt-get install -y build-essential perl git curl libssl-dev xz-utils libtinfo5 libncurses5
           export THEOS=~/theos
           git clone --recursive --depth 1 https://github.com/theos/theos.git $THEOS
@@ -23,27 +23,24 @@ jobs:
           rm -rf $THEOS/sdks
           git clone --depth 1 https://github.com/theos/sdks.git $THEOS/sdks
           
-      - name: Setup Toolchain (Fix-All)
+      - name: Setup Toolchain (Sbingner Pro)
         run: |
           export THEOS=~/theos
           mkdir -p $THEOS/toolchain/linux/iphone
           curl -L "https://github.com/sbingner/llvm-project/releases/download/v10.0.0-1/linux-ios-arm64e-clang-toolchain.tar.lzma" -o toolchain.tar.lzma
-          mkdir -p temp_toolchain
-          tar -xf toolchain.tar.lzma -C temp_toolchain
-          BIN_PATH=$(find temp_toolchain -name bin -type d | head -n 1)
-          PARENT_PATH=$(dirname "$BIN_PATH")
-          cp -R "$PARENT_PATH"/* $THEOS/toolchain/linux/iphone/
-          rm -rf temp_toolchain toolchain.tar.lzma
+          # Giải nén và bỏ qua folder cha để tránh lỗi đường dẫn
+          tar -xf toolchain.tar.lzma --strip-components=1 -C $THEOS/toolchain/linux/iphone
+          rm toolchain.tar.lzma
           
       - name: Compile Tweak
         run: |
           export THEOS=~/theos
+          # Ép máy chủ dùng đúng Toolchain mình vừa tải
           export PATH=$THEOS/toolchain/linux/iphone/bin:$PATH
-          # Bắt đầu nấu hàng
           make package
           
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@@v4
         with:
-          name: Hack-FF-Thanh-Pham
+          name: Hack-FF-Cua-Mày
           path: packages/*.deb
