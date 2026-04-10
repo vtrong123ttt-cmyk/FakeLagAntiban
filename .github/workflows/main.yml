@@ -1,35 +1,52 @@
-name: Build-Final-Fix
-on: 
-  push:         # Cứ Commit là tự chạy
-  workflow_dispatch: # Hoặc bấm nút chạy thủ công
+name: Build FakeLagPro
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4  # ĐÃ SỬA LỖI NÀY
+    runs-on: ubuntu-20.04 # Giữ bản này để có libtinfo5 fix lỗi biên dịch
 
-      - name: Setup All-in-One
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4 # Đã kiểm tra cú pháp, chuẩn @v4
+
+      - name: Install required libraries
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential perl git curl libssl-dev xz-utils libtinfo5 libncurses5
+          sudo apt-get install -y git make perl clang lld libtinfo5 libncurses5 curl xz-utils tar
+          
+      - name: Setup Theos
+        run: |
           git clone --recursive --depth 1 https://github.com/theos/theos.git ~/theos
+          
+      - name: Download iOS 14.5 SDK
+        run: |
           mkdir -p ~/theos/sdks
+          # Tải trực tiếp file nén để tránh lỗi git clone nặng
           curl -LO https://github.com/theos/sdks/raw/master/iPhoneOS14.5.sdk.tar.xz
           tar -xf iPhoneOS14.5.sdk.tar.xz -C ~/theos/sdks
+          rm iPhoneOS14.5.sdk.tar.xz
+
+      - name: Install toolchain (sbingner)
+        run: |
           mkdir -p ~/theos/toolchain/linux/iphone
+          # Dùng link version cụ thể để tránh lỗi 'not in gzip format'
           curl -L "https://github.com/sbingner/llvm-project/releases/download/v10.0.0-1/linux-ios-arm64e-clang-toolchain.tar.lzma" -o toolchain.tar.lzma
           tar -xf toolchain.tar.lzma --strip-components=1 -C ~/theos/toolchain/linux/iphone
+          rm toolchain.tar.lzma
 
-      - name: Build Tweak
+      - name: Build package
         run: |
           export THEOS=~/theos
           export PATH=$THEOS/toolchain/linux/iphone/bin:$PATH
+          # Bắt đầu nấu hàng
           make package FINALPACKAGE=1
 
-      - name: Upload
+      - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Tweak-Thanh-Pham
+          name: FakeLagPro-deb
           path: packages/*.deb
