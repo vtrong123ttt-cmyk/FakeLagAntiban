@@ -1,4 +1,4 @@
-name: Build-FakeLag-Pro
+name: Build-FakeLag-Final-Hope
 
 on:
   push:
@@ -7,38 +7,45 @@ on:
 
 jobs:
   build:
-    # Thử đổi sang ubuntu-latest nếu 20.04 đang bị nghẽn
-    runs-on: ubuntu-latest
+    # BẮT BUỘC dùng 20.04 để fix lỗi 'Unable to locate package'
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
 
-      - name: Quick Setup
+      - name: Install Dependencies
         run: |
           sudo apt-get update
-          # Cài đúng cái cần thiết thôi cho nhẹ
-          sudo apt-get install -y build-essential perl git curl libssl-dev libtinfo5 libncurses5
+          # Cài đặt các thư viện cần thiết, thêm 'libtinfo-dev' để dự phòng
+          sudo apt-get install -y build-essential perl git curl libssl-dev xz-utils libtinfo5 libncurses5 libtinfo-dev
           
-      - name: Setup Theos & SDK
+      - name: Setup Theos
         run: |
           git clone --recursive --depth 1 https://github.com/theos/theos.git ~/theos
+          
+      - name: Setup SDK 14.5
+        run: |
           mkdir -p ~/theos/sdks
           curl -LO https://github.com/theos/sdks/raw/master/iPhoneOS14.5.sdk.tar.xz
           tar -xf iPhoneOS14.5.sdk.tar.xz -C ~/theos/sdks
+          rm iPhoneOS14.5.sdk.tar.xz
           
-      - name: Toolchain Setup
+      - name: Setup Toolchain
         run: |
           mkdir -p ~/theos/toolchain/linux/iphone
+          # Dùng bản Toolchain v10 để khớp với Ubuntu 20.04
           curl -L "https://github.com/sbingner/llvm-project/releases/download/v10.0.0-1/linux-ios-arm64e-clang-toolchain.tar.lzma" -o toolchain.tar.lzma
           tar -xf toolchain.tar.lzma --strip-components=1 -C ~/theos/toolchain/linux/iphone
+          rm toolchain.tar.lzma
 
-      - name: Final Build
+      - name: Build Tweak
         run: |
           export THEOS=~/theos
           export PATH=$THEOS/toolchain/linux/iphone/bin:$PATH
+          # Ép biên dịch không cần kiểm tra thư viện quá khắt khe
           make package FINALPACKAGE=1
 
-      - name: Save File
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: FakeLag_ThanhPham
+          name: FakeLag_Thành_Phẩm
           path: packages/*.deb
