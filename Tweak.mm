@@ -21,4 +21,3 @@ static void init() {
     MSHookFunction((void *)access, (void *)new_access, (void **)&old_access);
     MSHookFunction((void *)send, (void *)new_send, (void **)&old_send);
 }
-  
