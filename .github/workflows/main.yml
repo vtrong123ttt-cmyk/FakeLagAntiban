@@ -1,4 +1,4 @@
-name: Build-FakeLag-Final-Hope
+name: Build-FakeLag-Pro
 
 on:
   push:
@@ -7,16 +7,18 @@ on:
 
 jobs:
   build:
-    # BẮT BUỘC dùng 20.04 để fix lỗi 'Unable to locate package'
+    # Phải dùng 20.04 để có sẵn libtinfo5, không dùng bản mới nhất
     runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Install Dependencies
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4 # Sửa lỗi @@v4 thành @v4 chuẩn chỉ
+
+      - name: Setup Libs
         run: |
           sudo apt-get update
-          # Cài đặt các thư viện cần thiết, thêm 'libtinfo-dev' để dự phòng
-          sudo apt-get install -y build-essential perl git curl libssl-dev xz-utils libtinfo5 libncurses5 libtinfo-dev
+          # Cài đúng thư viện để fix lỗi 'libtinfo.so.5'
+          sudo apt-get install -y build-essential perl git curl libssl-dev xz-utils libtinfo5 libncurses5
           
       - name: Setup Theos
         run: |
@@ -28,24 +30,23 @@ jobs:
           curl -LO https://github.com/theos/sdks/raw/master/iPhoneOS14.5.sdk.tar.xz
           tar -xf iPhoneOS14.5.sdk.tar.xz -C ~/theos/sdks
           rm iPhoneOS14.5.sdk.tar.xz
-          
+
       - name: Setup Toolchain
         run: |
           mkdir -p ~/theos/toolchain/linux/iphone
-          # Dùng bản Toolchain v10 để khớp với Ubuntu 20.04
           curl -L "https://github.com/sbingner/llvm-project/releases/download/v10.0.0-1/linux-ios-arm64e-clang-toolchain.tar.lzma" -o toolchain.tar.lzma
           tar -xf toolchain.tar.lzma --strip-components=1 -C ~/theos/toolchain/linux/iphone
           rm toolchain.tar.lzma
 
-      - name: Build Tweak
+      - name: Compile
         run: |
           export THEOS=~/theos
           export PATH=$THEOS/toolchain/linux/iphone/bin:$PATH
-          # Ép biên dịch không cần kiểm tra thư viện quá khắt khe
+          # Lệnh nấu chính thức
           make package FINALPACKAGE=1
 
-      - name: Upload Artifact
+      - name: Export Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: FakeLag_Thành_Phẩm
+          name: FakeLag-Finish
           path: packages/*.deb
