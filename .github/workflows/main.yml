@@ -1,52 +1,39 @@
-name: Build-FakeLag-Pro
-
-on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch:
+name: Build-Now
+on: [push, workflow_dispatch]
 
 jobs:
   build:
-    # Phải dùng 20.04 để có sẵn libtinfo5, không dùng bản mới nhất
-    runs-on: ubuntu-20.04
-
+    runs-on: ubuntu-20.04 # Bản này ổn định nhất để fix lỗi libtinfo5
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4 # Sửa lỗi @@v4 thành @v4 chuẩn chỉ
+      - uses: actions/checkout@v4 # Tuyệt đối không để @@v4
 
-      - name: Setup Libs
+      - name: Prep
         run: |
           sudo apt-get update
-          # Cài đúng thư viện để fix lỗi 'libtinfo.so.5'
-          sudo apt-get install -y build-essential perl git curl libssl-dev xz-utils libtinfo5 libncurses5
+          sudo apt-get install -y build-essential perl git curl libtinfo5 libncurses5
           
-      - name: Setup Theos
+      - name: Setup Theos & SDK
         run: |
+          # Chỉ clone 1 lớp cho nhanh
           git clone --recursive --depth 1 https://github.com/theos/theos.git ~/theos
-          
-      - name: Setup SDK 14.5
-        run: |
           mkdir -p ~/theos/sdks
           curl -LO https://github.com/theos/sdks/raw/master/iPhoneOS14.5.sdk.tar.xz
           tar -xf iPhoneOS14.5.sdk.tar.xz -C ~/theos/sdks
-          rm iPhoneOS14.5.sdk.tar.xz
-
+          
       - name: Setup Toolchain
         run: |
           mkdir -p ~/theos/toolchain/linux/iphone
           curl -L "https://github.com/sbingner/llvm-project/releases/download/v10.0.0-1/linux-ios-arm64e-clang-toolchain.tar.lzma" -o toolchain.tar.lzma
           tar -xf toolchain.tar.lzma --strip-components=1 -C ~/theos/toolchain/linux/iphone
-          rm toolchain.tar.lzma
 
-      - name: Compile
+      - name: Cooking
         run: |
           export THEOS=~/theos
           export PATH=$THEOS/toolchain/linux/iphone/bin:$PATH
-          # Lệnh nấu chính thức
           make package FINALPACKAGE=1
 
-      - name: Export Artifact
+      - name: Done
         uses: actions/upload-artifact@v4
         with:
-          name: FakeLag-Finish
+          name: Hang-Ve-Day
           path: packages/*.deb
