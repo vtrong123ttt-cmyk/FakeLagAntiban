@@ -1,0 +1,7 @@
+Package: com.satthu.ffmod
+Name: Sát Thủ Mod
+Depends: mobilesubstrate
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: Mod Menu Anti-ban Free Fire
+Maintainer: SatThu
