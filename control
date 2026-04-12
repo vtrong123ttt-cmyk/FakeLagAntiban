@@ -1,7 +1,9 @@
-Package: com.satthu.ffmod
-Name: Sát Thủ Mod
+Package: com.satthu.fakelag
+Name: FakeLag Antiban
 Depends: mobilesubstrate
 Version: 1.0.0
 Architecture: iphoneos-arm
-Description: Mod Menu Anti-ban Free Fire
+Description: Mod Antiban Free Fire 2026 by SatThu
 Maintainer: SatThu
+Author: SatThu
+Section: Tweaks
