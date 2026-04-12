@@ -1,13 +1,10 @@
-ARCHS = arm64 arm64e
-TARGET = iphone:clang:latest:14.0
-DEBUG = 0
-FINALPACKAGE = 1
+export ARCHS = arm64 arm64e
+export TARGET = iphone:clang:latest:14.0
 
 include $(THEOS)/makefiles/common.mk
 
-TWEAK_NAME = SatThuFF
-SatThuFF_FILES = Tweak.mm
-SatThuFF_CFLAGS = -fobjc-arc
-SatThuFF_LIBRARIES = substrate
+TWEAK_NAME = FakeLagAntiban
+FakeLagAntiban_FILES = Tweak.mm
+FakeLagAntiban_CFLAGS = -fobjc-arc
 
 include $(THEOS_MAKE_PATH)/tweak.mk
